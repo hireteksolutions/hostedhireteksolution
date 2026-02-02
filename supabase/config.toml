@@ -1,0 +1,7 @@
+project_id = "ztvrwrybgnqijzgefmjp"
+
+[functions.verify-recaptcha]
+verify_jwt = false
+
+[functions.get-recaptcha-key]
+verify_jwt = false
