@@ -11,8 +11,9 @@ import {
   Building2,
   Heart,
   Share2,
-  IndianRupee,
+  Pencil,
 } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -28,14 +29,17 @@ interface Job {
   description: string;
   requirements: string;
   created_at: string;
+  employer_id: string;
 }
 
 const JobDetail = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [job, setJob] = useState<Job | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [canEdit, setCanEdit] = useState(false);
 
   useEffect(() => {
     if (slug) {
@@ -45,10 +49,9 @@ const JobDetail = () => {
 
   const fetchJob = async () => {
     try {
-      // Select only public-facing columns, excluding employer_id for security
       const { data, error } = await supabase
         .from("jobs")
-        .select("id, slug, title, company, location, type, salary_min, salary_max, description, requirements, created_at")
+        .select("id, slug, title, company, location, type, salary_min, salary_max, description, requirements, created_at, employer_id")
         .eq("slug", slug)
         .maybeSingle();
 
@@ -58,6 +61,19 @@ const JobDetail = () => {
         return;
       }
       setJob(data);
+
+      // Check if user can edit (is owner or admin)
+      if (user) {
+        const isOwner = data.employer_id === user.id;
+        const { data: roles } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .in("role", ["admin"]);
+        
+        const isAdmin = roles && roles.length > 0;
+        setCanEdit(isOwner || isAdmin);
+      }
     } catch (error: any) {
       toast({
         title: "Error",
@@ -108,6 +124,16 @@ const JobDetail = () => {
                       </div>
                     </div>
                     <div className="flex gap-2">
+                      {canEdit && (
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          onClick={() => navigate(`/jobs/${job.slug}/edit`)}
+                          title="Edit Job"
+                        >
+                          <Pencil className="h-5 w-5" />
+                        </Button>
+                      )}
                       <Button variant="ghost" size="icon">
                         <Heart className="h-5 w-5" />
                       </Button>
@@ -123,10 +149,9 @@ const JobDetail = () => {
                       {job.location}
                     </Badge>
                     <Badge variant="outline" className="py-2 px-4">{job.type}</Badge>
-                    <Badge variant="outline" className="py-2 px-4 flex items-center gap-1">
-                      <IndianRupee className="h-4 w-4" />
+                    <Badge variant="outline" className="py-2 px-4">
                       {job.salary_min && job.salary_max
-                        ? `₹${(job.salary_min / 1000).toFixed(0)}lacs - ₹${(job.salary_max / 1000).toFixed(0)}lacs`
+                        ? `₹${job.salary_min}L - ₹${job.salary_max}L`
                         : "Competitive"}
                     </Badge>
                     <Badge variant="outline" className="py-2 px-4 flex items-center gap-1">

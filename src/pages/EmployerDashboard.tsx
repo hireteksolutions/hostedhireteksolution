@@ -8,13 +8,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { Briefcase, Users, FileText, Eye, Trash2, Download, ExternalLink, PlusCircle } from "lucide-react";
+import { Briefcase, Users, FileText, Eye, Trash2, Download, ExternalLink, PlusCircle, LogOut, Pencil } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 interface Job {
   id: string;
+  slug: string;
   title: string;
   company: string;
   location: string;
@@ -39,6 +40,7 @@ interface Application {
 
 interface Blog {
   id: string;
+  slug: string;
   title: string;
   content: string;
   excerpt: string | null;
@@ -453,11 +455,26 @@ const EmployerDashboard = () => {
     },
   ];
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast({
+      title: "Logged out",
+      description: "You have been successfully logged out",
+    });
+    navigate("/");
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Employer Dashboard</h1>
-        <p className="text-muted-foreground">Manage your job postings and applications</p>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-4xl font-bold mb-2">Employer Dashboard</h1>
+          <p className="text-muted-foreground">Manage your job postings and applications</p>
+        </div>
+        <Button variant="outline" onClick={handleLogout}>
+          <LogOut className="mr-2 h-4 w-4" />
+          Logout
+        </Button>
       </div>
 
       {/* Stats */}
@@ -645,9 +662,18 @@ const EmployerDashboard = () => {
                               <Button
                                 size="sm"
                                 variant="outline"
-                                onClick={() => navigate(`/jobs/${job.id}`)}
+                                onClick={() => navigate(`/jobs/${job.slug}`)}
+                                title="View"
                               >
                                 <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => navigate(`/jobs/${job.slug}/edit`)}
+                                title="Edit"
+                              >
+                                <Pencil className="h-4 w-4" />
                               </Button>
                               <Button
                                 size="sm"
@@ -803,6 +829,14 @@ const EmployerDashboard = () => {
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => navigate(`/blog/${blog.slug}/edit`)}
+                                title="Edit"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
                               <Button
                                 size="sm"
                                 variant="outline"

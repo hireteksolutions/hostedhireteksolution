@@ -246,7 +246,7 @@ const Jobs = () => {
                     type={job.type}
                     salary={
                       job.salary_min && job.salary_max
-                      ? `₹${(job.salary_min / 1000).toFixed(0)}Lacs - ₹${(job.salary_max / 1000).toFixed(0)}Lacs`
+                       ? `₹${job.salary_min}L - ₹${job.salary_max}L`
                         : "Competitive"
                     }
                     description={job.description}

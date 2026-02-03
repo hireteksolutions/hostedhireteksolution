@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { Calendar, ArrowLeft, Clock, Share2, Twitter, Linkedin, Facebook, Link2, ChevronRight } from "lucide-react";
+import { Calendar, ArrowLeft, Clock, Share2, Twitter, Linkedin, Facebook, Link2, ChevronRight, Pencil } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Blog {
   id: string;
@@ -17,14 +18,18 @@ interface Blog {
   excerpt: string | null;
   image_url: string | null;
   created_at: string;
+  author_id: string;
 }
 
 const BlogDetail = () => {
   const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [blog, setBlog] = useState<Blog | null>(null);
   const [relatedPosts, setRelatedPosts] = useState<Blog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [readProgress, setReadProgress] = useState(0);
+  const [canEdit, setCanEdit] = useState(false);
   const { toast } = useToast();
 
   const calculateReadingTime = (content: string) => {
@@ -56,13 +61,26 @@ const BlogDetail = () => {
     try {
       const { data, error } = await supabase
         .from("blogs")
-        .select("id, slug, title, content, excerpt, image_url, created_at")
+        .select("id, slug, title, content, excerpt, image_url, created_at, author_id")
         .eq("slug", slug)
         .eq("status", "published")
         .maybeSingle();
 
       if (error) throw error;
       setBlog(data);
+
+      // Check if user can edit (is author or admin)
+      if (data && user) {
+        const isOwner = data.author_id === user.id;
+        const { data: roles } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .in("role", ["admin"]);
+        
+        const isAdmin = roles && roles.length > 0;
+        setCanEdit(isOwner || isAdmin);
+      }
     } catch (error: any) {
       toast({
         title: "Error",
@@ -78,7 +96,7 @@ const BlogDetail = () => {
     try {
       const { data, error } = await supabase
         .from("blogs")
-        .select("id, slug, title, content, excerpt, image_url, created_at")
+        .select("id, slug, title, content, excerpt, image_url, created_at, author_id")
         .eq("status", "published")
         .neq("slug", slug)
         .order("created_at", { ascending: false })
@@ -182,7 +200,20 @@ const BlogDetail = () => {
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
             <div className="absolute bottom-0 left-0 right-0 p-6 md:p-12">
               <div className="container mx-auto max-w-4xl">
-                <Badge variant="secondary" className="mb-4">Featured Article</Badge>
+                <div className="flex items-start justify-between gap-4">
+                  <Badge variant="secondary" className="mb-4">Featured Article</Badge>
+                  {canEdit && (
+                    <Button 
+                      variant="secondary" 
+                      size="sm"
+                      onClick={() => navigate(`/blog/${blog.slug}/edit`)}
+                      className="gap-2"
+                    >
+                      <Pencil className="h-4 w-4" />
+                      Edit
+                    </Button>
+                  )}
+                </div>
                 <h1 className="text-3xl md:text-5xl font-bold mb-4 leading-tight">{blog.title}</h1>
                 <div className="flex flex-wrap items-center gap-4 text-muted-foreground">
                   <div className="flex items-center gap-2">
@@ -208,7 +239,20 @@ const BlogDetail = () => {
         ) : (
           <div className="bg-gradient-to-br from-primary/10 via-background to-secondary/10 py-16 md:py-24">
             <div className="container mx-auto px-4 max-w-4xl">
-              <Badge variant="secondary" className="mb-4">Featured Article</Badge>
+              <div className="flex items-start justify-between gap-4">
+                <Badge variant="secondary" className="mb-4">Featured Article</Badge>
+                {canEdit && (
+                  <Button 
+                    variant="secondary" 
+                    size="sm"
+                    onClick={() => navigate(`/blog/${blog.slug}/edit`)}
+                    className="gap-2"
+                  >
+                    <Pencil className="h-4 w-4" />
+                    Edit
+                  </Button>
+                )}
+              </div>
               <h1 className="text-3xl md:text-5xl font-bold mb-6 leading-tight">{blog.title}</h1>
               <div className="flex flex-wrap items-center gap-4 text-muted-foreground">
                 <div className="flex items-center gap-2">

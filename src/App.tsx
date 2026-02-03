@@ -19,6 +19,8 @@ import Auth from "./pages/Auth";
 import PostJob from "./pages/PostJob";
 import EmployerDashboard from "./pages/EmployerDashboard";
 import NotFound from "./pages/NotFound";
+import EditJob from "./pages/EditJob";
+import EditBlog from "./pages/EditBlog";
 
 const queryClient = new QueryClient();
 
@@ -37,9 +39,11 @@ const App = () => (
                 <Route path="/jobs" element={<Jobs />} />
                 <Route path="/jobs/:slug" element={<JobDetail />} />
                 <Route path="/apply/:slug" element={<JobApplication />} />
+                <Route path="/jobs/:slug/edit" element={<EditJob />} />
                 <Route path="/services" element={<Services />} />
                 <Route path="/blog" element={<Blog />} />
                 <Route path="/blog/:slug" element={<BlogDetail />} />
+                <Route path="/blog/:slug/edit" element={<EditBlog />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/auth" element={<Auth />} />
