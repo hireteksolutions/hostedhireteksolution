@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import { formatSalary } from "@/lib/salary-utils";
 import JobCard from "@/components/JobCard";
 import {
   Dialog,
@@ -424,10 +425,8 @@ useEffect(() => {
                 company={job.company}
                 location={job.location}
                 type={job.type}
-                salary={
-                  job.salary_min && job.salary_max
-                    ? `$${(job.salary_min / 1000).toFixed(0)}k - $${(job.salary_max / 1000).toFixed(0)}k`
-                    : "Competitive"
+                 salary={
+                  formatSalary(job.salary_min, job.salary_max)
                 }
                 description={job.description}
                 posted={new Date(job.created_at).toLocaleDateString()}

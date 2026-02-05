@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { formatSalary } from "@/lib/salary-utils";
 
 interface Job {
   id: string;
@@ -244,11 +245,7 @@ const Jobs = () => {
                     company={job.company}
                     location={job.location}
                     type={job.type}
-                    salary={
-                      job.salary_min && job.salary_max
-                       ? `₹${job.salary_min}L - ₹${job.salary_max}L`
-                        : "Competitive"
-                    }
+                    salary={formatSalary(job.salary_min, job.salary_max)}
                     description={job.description}
                     posted={new Date(job.created_at).toLocaleDateString()}
                   />

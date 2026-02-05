@@ -16,6 +16,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { formatSalary } from "@/lib/salary-utils";
 
 interface Job {
   id: string;
@@ -150,9 +151,7 @@ const JobDetail = () => {
                     </Badge>
                     <Badge variant="outline" className="py-2 px-4">{job.type}</Badge>
                     <Badge variant="outline" className="py-2 px-4">
-                      {job.salary_min && job.salary_max
-                        ? `₹${job.salary_min}L - ₹${job.salary_max}L`
-                        : "Competitive"}
+                      {formatSalary(job.salary_min, job.salary_max)}
                     </Badge>
                     <Badge variant="outline" className="py-2 px-4 flex items-center gap-1">
                       <Clock className="h-4 w-4" />
