@@ -6,11 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Upload, FileText, AlertCircle } from "lucide-react";
+import { Upload, FileText } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
-import { useAuth } from "@/contexts/AuthContext";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const applicationSchema = z.object({
   firstName: z.string().trim().min(1, "First name is required").max(50),
@@ -41,7 +39,6 @@ const JobApplication = () => {
   }, [slug]);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { user, loading } = useAuth();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -129,10 +126,9 @@ const JobApplication = () => {
 
       if (uploadError) throw uploadError;
 
-      // Submit application with authenticated user's ID
+      // Submit application (no auth required)
       const { error: insertError } = await supabase.from("applications").insert({
         job_id: jobId,
-        applicant_id: user!.id, // Link application to authenticated user
         applicant_name: `${firstName} ${lastName}`,
         email,
         phone,
@@ -159,51 +155,8 @@ const JobApplication = () => {
     }
   };
 
-  // Show loading state
-  if (loading) {
-    return (
-      <div className="flex flex-col min-h-screen">
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-2xl mx-auto text-center">
-            <p className="text-muted-foreground">Loading...</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
-  // Require authentication
-  if (!user) {
-    return (
-      <div className="flex flex-col min-h-screen">
-        <div className="container mx-auto px-4 py-8">
-          <div className="max-w-2xl mx-auto">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-2xl">Sign In Required</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Alert>
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription>
-                    You need to sign in to submit a job application. This helps protect your personal information and allows you to track your applications.
-                  </AlertDescription>
-                </Alert>
-                <div className="flex gap-4">
-                  <Button variant="outline" onClick={() => navigate(-1)}>
-                    Go Back
-                  </Button>
-                  <Button onClick={() => navigate("/auth")}>
-                    Sign In
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </div>
-    );
-  }
+
 
   return (
     <div className="flex flex-col min-h-screen">
